@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.0] - 2017-06-20
+## [0.1.0] - 2019-04-19
 ### Added
 - Global hooks for ActiveRecord 4.2.10.
 - Overrides to ActiveRecord::Base, ActiveRecord::Relation, ActiveRecord::Persistence to serve callbacks.

@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/Advanon/active_record_streams.svg?branch=master)](https://travis-ci.org/Advanon/active_record_streams)
+[![Gem Version](https://badge.fury.io/rb/active_record_streams.svg)](https://badge.fury.io/rb/active_record_streams)
+
 # Active Record Streams
 
 A small library to stream ActiveRecord's create/update/delete

@@ -9,6 +9,7 @@ require 'active_record_streams/publishers/kinesis_client'
 require 'active_record_streams/publishers/kinesis_stream'
 require 'active_record_streams/publishers/sns_client'
 require 'active_record_streams/publishers/sns_stream'
+require 'active_record_streams/publishers/http_stream'
 
 require 'active_record_streams/extensions/active_record/persistence'
 require 'active_record_streams/extensions/active_record/relation'

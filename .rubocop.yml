@@ -4,6 +4,7 @@ AllCops:
   TargetRubyVersion: 2.3
   Exclude:
   - !ruby/regexp /_spec\.rb\z/
+  - vendor/**/*
 
 Documentation:
     Enabled: false
