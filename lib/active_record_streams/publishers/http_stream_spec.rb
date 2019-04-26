@@ -8,9 +8,11 @@ RSpec.describe ActiveRecordStreams::Publishers::HttpStream do
   let(:desired_table_name) { '*' }
   let(:actual_table_name) { 'lovely_records' }
   let(:ignored_tables) { [] }
+  let(:error_handler) { nil }
 
-  let(:request) { double('body=': nil, request: nil) }
-  let(:http_client) { double('body=': nil, request: nil) }
+  let(:request) { double('body=': nil) }
+  let(:response) { double(code: 200) }
+  let(:http_client) { double('body=': nil, request: response) }
   let(:message) { double(json: '{}') }
 
   subject do
@@ -18,7 +20,8 @@ RSpec.describe ActiveRecordStreams::Publishers::HttpStream do
       url: url,
       headers: headers,
       table_name: desired_table_name,
-      ignored_tables: ignored_tables
+      ignored_tables: ignored_tables,
+      error_handler: error_handler
     )
   end
 
@@ -67,6 +70,22 @@ RSpec.describe ActiveRecordStreams::Publishers::HttpStream do
 
         expect(request).not_to have_received(:body=).with(message.json)
         expect(http_client).not_to have_received(:request).with(request)
+      end
+    end
+
+    context 'error response' do
+      let(:response) { double(body: 'Error', code: 400) }
+      let(:error_handler) { Proc.new {} }
+
+      it 'calls error handler' do
+        expect(error_handler).to receive(:call) do |stream, table_name, message, error|
+          expect(stream).to eq(subject)
+          expect(table_name).to eq(actual_table_name)
+          expect(message).to eq(message)
+          expect(error.message).to eq('Error')
+        end
+
+        subject.publish(actual_table_name, message)
       end
     end
   end

@@ -6,10 +6,25 @@
 A small library to stream ActiveRecord's create/update/delete
 events to AWS SNS topics, Kinesis streams or HTTP listeners.
 
+# Table of contents
+
+* [Version mappings](#version-mappings)
+* [Warning](#warning)
+* [How does it work](#how-does-it-work)
+* [Installation](#installation)
+* [Usage](#usage)
+  * [Setting up for AWS](#setting-up-for-aws)
+  * [Enabling streams](#enabling-streams)
+  * [Error handling](#error-handling)
+* [Supported targets](#supported-targets)
+* [License](#license)
+* [Development](#development)
+* [Contributing](#contributing)
+
 ## Version mappings
 
 ```
-1.0.X - ActiveRecord 4.2.10
+0.1.X - ActiveRecord 4.2.10
 ```
 
 ## Warning
@@ -96,7 +111,50 @@ ActiveRecordStreams.configure do |config|
 end
 ```
 
-## Supported targets:
+### Error handling
+
+It might happen that the message delivery fails. In such case you might
+want to retry sending the message or even use a background processor like
+`Sidekiq` to perform retires in automated way.
+
+Every stream has an `error_handler` option which accepts `lambda/proc`
+with `error_handler :: (Stream, TableName, Message, Error) -> *` signature.
+
+**NOTE** that your consumer has to take care of duplicated messages.
+Each message contains `EventID` which may help to identify duplications.
+
+```ruby
+# config/initializers/active_record_streams.rb
+
+require 'active_record_streams'
+
+class SampleHttpReSender
+  include Sidekiq::Worker
+  
+  def perform(table_name, message_json)
+    message = ActiveRecordStreams::Message.from_json(message_json)
+    ActiveRecordStreams.config.streams.each do |stream|
+      stream.publish(table_name, message)
+    end
+  end
+end
+
+ActiveRecordStreams.configure do |config|
+  config.streams << ActiveRecordStreams::Publishers::HttpStream.new(
+    url: 'https://posteventshere.test',
+    error_handler: lambda do |stream, table_name, message, error|
+      # Do whatever you want here, you may also try to start a new
+      # thread or re-try publishing directly to stream using
+      # stream.publish(table_name, message)
+ 
+      # Try to schedule re-publishing with Sidekiq 
+      SampleHttpReSender.perform_async(table_name, message.json)
+    end
+  )
+end
+```
+
+## Supported targets
 
 ### ActiveRecordStreams::Publishers::SnsStream
 

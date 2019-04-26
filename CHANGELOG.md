@@ -11,3 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Global hooks for ActiveRecord 4.2.10.
 - Overrides to ActiveRecord::Base, ActiveRecord::Relation, ActiveRecord::Persistence to serve callbacks.
 - SNS, Kinesis and HTTP stream types.
+
+## [0.1.1] - 2019-04-26
+### Added
+- Error handlers for streams
+- Documentation for error handlers
+- Tests for error handlers
+- New method to build Message from json

@@ -9,6 +9,7 @@ RSpec.describe ActiveRecordStreams::Publishers::KinesisStream do
   let(:actual_table_name) { 'lovely_records' }
   let(:ignored_tables) { [] }
   let(:overrides) { {} }
+  let(:error_handler) { nil }
 
   let(:message) { double(json: '{}') }
   let(:kinesis_client) { double(publish: nil) }
@@ -18,7 +19,8 @@ RSpec.describe ActiveRecordStreams::Publishers::KinesisStream do
       stream_name: stream_name,
       table_name: desired_table_name,
       ignored_tables: ignored_tables,
-      overrides: overrides
+      overrides: overrides,
+      error_handler: error_handler
     )
   end
 
@@ -84,6 +86,25 @@ RSpec.describe ActiveRecordStreams::Publishers::KinesisStream do
           expect(partition_key).to match(/\A#{actual_table_name}-/i)
           expect(data).to eq(message.json)
           expect(overrides).to eq(overrides)
+        end
+
+        subject.publish(actual_table_name, message)
+      end
+    end
+
+    context 'delivery error' do
+      let(:error_handler) { Proc.new {} }
+
+      it 'calls error handler' do
+        expect(kinesis_client).to receive(:publish) do
+          raise StandardError, 'Delivery error'
+        end
+
+        expect(error_handler).to receive(:call) do |stream, table_name, message, error|
+          expect(stream).to eq(subject)
+          expect(table_name).to eq(actual_table_name)
+          expect(message).to eq(message)
+          expect(error.message).to eq('Delivery error')
         end
 
         subject.publish(actual_table_name, message)

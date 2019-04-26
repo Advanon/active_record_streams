@@ -6,18 +6,28 @@ module ActiveRecordStreams
   module Publishers
     class HttpStream
       ANY_TABLE = '*'
+      SUCCESSFUL_CODE_REGEX = /\A2\d{2}\z/.freeze
       DEFAULT_CONTENT_TYPE = 'application/json'
+
+      ##
+      # @param [String] url
+      # @param [Hash] headers
+      # @param [String] table_name
+      # @param [Enumerable<String>] ignored_tables
+      # @param [Proc] error_handler
 
       def initialize(
         url:,
         headers: {},
         table_name: ANY_TABLE,
-        ignored_tables: []
+        ignored_tables: [],
+        error_handler: nil
       )
         @url = url
         @headers = headers
         @table_name = table_name
         @ignored_tables = ignored_tables
+        @error_handler = error_handler
       end
 
       def publish(table_name, message)
@@ -25,7 +35,12 @@ module ActiveRecordStreams
                       table_name == @table_name
 
         request.body = message.json
-        http.request(request)
+        response = http.request(request)
+        assert_response_code(response)
+      rescue StandardError => e
+        raise e unless @error_handler.is_a?(Proc)
+
+        @error_handler.call(self, table_name, message, e)
       end
 
       private
@@ -52,6 +67,12 @@ module ActiveRecordStreams
 
       def headers
         { 'Content-Type': DEFAULT_CONTENT_TYPE }.merge(@headers)
+      end
+
+      def assert_response_code(response)
+        return if response.code.to_s.match(SUCCESSFUL_CODE_REGEX)
+
+        raise StandardError, response.body
       end
     end
   end

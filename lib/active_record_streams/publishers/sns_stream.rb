@@ -10,17 +10,20 @@ module ActiveRecordStreams
       # @param [String] table_name
       # @param [Enumerable<String>] ignored_tables
       # @param [Hash] overrides
+      # @param [Proc] error_handler
 
       def initialize(
         topic_arn:,
         table_name: ANY_TABLE,
         ignored_tables: [],
-        overrides: {}
+        overrides: {},
+        error_handler: nil
       )
         @topic_arn = topic_arn
         @table_name = table_name
         @ignored_tables = ignored_tables
         @overrides = overrides
+        @error_handler = error_handler
       end
 
       ##
@@ -32,6 +35,10 @@ module ActiveRecordStreams
                       table_name == @table_name
 
         client.publish(@topic_arn, message.json, @overrides)
+      rescue StandardError => e
+        raise e unless @error_handler.is_a?(Proc)
+
+        @error_handler.call(self, table_name, message, e)
       end
 
       private
