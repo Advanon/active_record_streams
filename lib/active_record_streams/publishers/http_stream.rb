@@ -30,7 +30,12 @@ module ActiveRecordStreams
         @error_handler = error_handler
       end
 
-      def publish(table_name, message)
+      ##
+      # @param [String] table_name
+      # @param [ActiveRecordStreams::Message] message
+      # @param [Boolean] handle_error
+
+      def publish(table_name, message, handle_error: true)
         return unless (any_table? && allowed_table?(table_name)) ||
                       table_name == @table_name
 
@@ -38,7 +43,7 @@ module ActiveRecordStreams
         response = http.request(request)
         assert_response_code(response)
       rescue StandardError => e
-        raise e unless @error_handler.is_a?(Proc)
+        raise e unless call_error_handler?(handle_error)
 
         @error_handler.call(self, table_name, message, e)
       end
@@ -81,6 +86,10 @@ module ActiveRecordStreams
         return if response.code.to_s.match(SUCCESSFUL_CODE_REGEX)
 
         raise StandardError, response.body
+      end
+
+      def call_error_handler?(handle_error)
+        @error_handler.is_a?(Proc) && handle_error
       end
     end
   end

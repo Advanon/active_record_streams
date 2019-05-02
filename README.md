@@ -134,7 +134,10 @@ class SampleHttpReSender
   def perform(table_name, message_json)
     message = ActiveRecordStreams::Message.from_json(message_json)
     ActiveRecordStreams.config.streams.each do |stream|
-      stream.publish(table_name, message)
+      # Use `handle_error: false` to raise exceptions instead of
+      # calling `error_handler`, this will let he Sidekiq to
+      # perform retries on it's own 
+      stream.publish(table_name, message, handle_error: false)
     end
   end
 end

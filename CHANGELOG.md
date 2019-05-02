@@ -26,3 +26,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.3] - 2019-05-02
 ### Changed
 - `Content-type` header for the HTTP streams is set as a string to fix doubled content-type issue
+
+## [0.1.4] - 2019-05-02
+### Added
+- Error-handler switch for `publish` methods
+
+### Changed
+- README to reflect the error-handler switch

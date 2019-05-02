@@ -32,15 +32,16 @@ module ActiveRecordStreams
       ##
       # @param [String] table_name
       # @param [ActiveRecordStreams::Message] message
+      # @param [Boolean] handle_error
 
-      def publish(table_name, message)
+      def publish(table_name, message, handle_error: true)
         return unless (any_table? && allowed_table?(table_name)) ||
                       table_name == @table_name
 
         client.publish(@stream_name, partition_key(table_name),
                        message.json, @overrides)
       rescue StandardError => e
-        raise e unless @error_handler.is_a?(Proc)
+        raise e unless call_error_handler?(handle_error)
 
         @error_handler.call(self, table_name, message, e)
       end
@@ -53,6 +54,10 @@ module ActiveRecordStreams
 
       def allowed_table?(table_name)
         !@ignored_tables.include?(table_name)
+      end
+
+      def call_error_handler?(handle_error)
+        @error_handler.is_a?(Proc) && handle_error
       end
 
       def partition_key(table_name)

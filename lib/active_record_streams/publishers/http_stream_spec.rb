@@ -89,6 +89,18 @@ RSpec.describe ActiveRecordStreams::Publishers::HttpStream do
       end
     end
 
+    context 'error response with error handling off' do
+      let(:response) { double(body: 'Error', code: 400) }
+      let(:error_handler) { Proc.new {} }
+
+      it 'raises exception' do
+        expect(error_handler).not_to receive(:call)
+
+        expect { subject.publish(actual_table_name, message, handle_error: false) }
+          .to raise_error(StandardError)
+      end
+    end
+
     context 'https target' do
       let(:url) { 'https://hello.world' }
 

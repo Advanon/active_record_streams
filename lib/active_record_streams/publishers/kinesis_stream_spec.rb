@@ -110,5 +110,20 @@ RSpec.describe ActiveRecordStreams::Publishers::KinesisStream do
         subject.publish(actual_table_name, message)
       end
     end
+
+    context 'delivery error error with error handling off' do
+      let(:error_handler) { Proc.new {} }
+
+      it 'raises exception' do
+        expect(kinesis_client).to receive(:publish) do
+          raise StandardError, 'Delivery error'
+        end
+
+        expect(error_handler).not_to receive(:call)
+
+        expect { subject.publish(actual_table_name, message, handle_error: false) }
+          .to raise_error(StandardError)
+      end
+    end
   end
 end
