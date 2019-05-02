@@ -58,7 +58,15 @@ module ActiveRecordStreams
       end
 
       def http
-        @http ||= Net::HTTP.new(uri.host, uri.port)
+        @http ||= begin
+          http_client = Net::HTTP.new(uri.host, uri.port)
+          http_client.use_ssl = true if https?
+          http_client
+        end
+      end
+
+      def https?
+        uri.scheme == 'https'
       end
 
       def uri

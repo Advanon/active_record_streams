@@ -18,3 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation for error handlers
 - Tests for error handlers
 - New method to build Message from json
+
+## [0.1.2] - 2019-05-02
+### Added
+- HTTPS targets support

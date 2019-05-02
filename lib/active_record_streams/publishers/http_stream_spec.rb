@@ -12,7 +12,7 @@ RSpec.describe ActiveRecordStreams::Publishers::HttpStream do
 
   let(:request) { double('body=': nil) }
   let(:response) { double(code: 200) }
-  let(:http_client) { double('body=': nil, request: response) }
+  let(:http_client) { double('body=': nil, 'use_ssl=': nil, request: response) }
   let(:message) { double(json: '{}') }
 
   subject do
@@ -86,6 +86,19 @@ RSpec.describe ActiveRecordStreams::Publishers::HttpStream do
         end
 
         subject.publish(actual_table_name, message)
+      end
+    end
+
+    context 'https target' do
+      let(:url) { 'https://hello.world' }
+
+      it 'sends event to an https target' do
+        expect(http_client).to receive(:use_ssl=).with(true)
+
+        subject.publish(actual_table_name, message)
+
+        expect(request).to have_received(:body=).with(message.json)
+        expect(http_client).to have_received(:request).with(request)
       end
     end
   end
