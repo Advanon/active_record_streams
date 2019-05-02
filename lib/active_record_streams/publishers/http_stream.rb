@@ -74,7 +74,7 @@ module ActiveRecordStreams
       end
 
       def headers
-        { 'Content-Type': DEFAULT_CONTENT_TYPE }.merge(@headers)
+        { 'Content-Type' => DEFAULT_CONTENT_TYPE }.merge(@headers)
       end
 
       def assert_response_code(response)
